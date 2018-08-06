@@ -123,10 +123,12 @@ public:
 
     /* cURL APIs */
     bool isCurlInit();
+    void getLastWebHeaders( std::string& outWebHead /* out */);
     void getLastWebResponse( std::string& outWebResp /* out */ );
     void getLastCurlError( std::string& outErrResp /* out */);
 
     /* Internal cURL related methods */
+    int saveLastWebHeaders(  char*& data, size_t size );
     int saveLastWebResponse( char*& data, size_t size );
 
     /* cURL proxy APIs */
@@ -152,6 +154,7 @@ private:
     CURL* m_curlHandle;
     char* m_errorBuffer;
     std::string m_callbackData;
+    std::string m_headerData;
 
     /* cURL flags */
     bool m_curlProxyParamsSet;
@@ -191,6 +194,7 @@ private:
     bool performPost( const std::string& postUrl, std::string dataStr = "" );
 
     /* Internal cURL related methods */
+    static int headerCallback( char* data, size_t size, size_t nmemb, twitCurl* pTwitCurlObj );
     static int curlCallback( char* data, size_t size, size_t nmemb, twitCurl* pTwitCurlObj );
 };
 

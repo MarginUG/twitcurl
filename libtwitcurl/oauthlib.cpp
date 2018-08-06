@@ -1,7 +1,7 @@
 #include "twitcurlurls.h"
 #include "oauthlib.h"
 #include "HMAC_SHA1.h"
-#include "base64.h"
+#include "twitcurl_base64.h"
 #include "urlencode.h"
 
 /*++

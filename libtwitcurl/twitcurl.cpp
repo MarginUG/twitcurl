@@ -1520,6 +1520,27 @@ bool twitCurl::trendsAvailableGet()
 }
 
 /*++
+* @method: twitCurl::getLastWebHeaders
+*
+* @description: method to get http headers for the most recent request sent.
+*               twitcurl users need to call this method and parse the header
+*               data returned by twitter to see what has happened.
+*
+* @input: outWebHead - string in which twitter's response headers are supplied back to caller
+*
+* @output: none
+*
+*--*/
+void twitCurl::getLastWebHeaders( std::string& outWebHead )
+{
+    outWebHead = "";
+    if( m_headerData.length() )
+    {
+        outWebHead = m_headerData;
+    }
+}
+
+/*++
 * @method: twitCurl::getLastWebResponse
 *
 * @description: method to get http response for the most recent request sent.
@@ -1559,6 +1580,30 @@ void twitCurl::getLastCurlError( std::string& outErrResp )
 }
 
 /*++
+* @method: twitCurl::headerCallback
+*
+* @description: static method to get http headers back from cURL.
+*               this is an internal method, users of twitcurl need not
+*               use this.
+*
+* @input: as per cURL convention.
+*
+* @output: size of data stored in our buffer
+*
+* @remarks: internal method
+*
+*--*/
+int twitCurl::headerCallback( char* data, size_t size, size_t nmemb, twitCurl* pTwitCurlObj )
+{
+    if( pTwitCurlObj && data )
+    {
+        /* Save http headers in twitcurl object's buffer */
+        return pTwitCurlObj->saveLastWebHeaders( data, ( size*nmemb ) );
+    }
+    return 0;
+}
+
+/*++
 * @method: twitCurl::curlCallback
 *
 * @description: static method to get http response back from cURL.
@@ -1578,6 +1623,31 @@ int twitCurl::curlCallback( char* data, size_t size, size_t nmemb, twitCurl* pTw
     {
         /* Save http response in twitcurl object's buffer */
         return pTwitCurlObj->saveLastWebResponse( data, ( size*nmemb ) );
+    }
+    return 0;
+}
+
+/*++
+* @method: twitCurl::saveLastWebHeaders
+*
+* @description: method to save http headers. this is an internal method
+*               and twitcurl users need not use this.
+*
+* @input: data - character buffer from cURL,
+*         size - size of character buffer
+*
+* @output: size of data stored in our buffer
+*
+* @remarks: internal method
+*
+*--*/
+int twitCurl::saveLastWebHeaders(  char*& data, size_t size )
+{
+    if( data && size )
+    {
+        /* Append data in our internal buffer */
+        m_headerData.append( data, size );
+        return (int)size;
     }
     return 0;
 }
@@ -1728,6 +1798,8 @@ void twitCurl::prepareCurlCallback()
     curl_easy_setopt( m_curlHandle, CURLOPT_ERRORBUFFER, m_errorBuffer );
 
     /* Set callback function to get response */
+    curl_easy_setopt( m_curlHandle, CURLOPT_HEADERFUNCTION, headerCallback );
+    curl_easy_setopt( m_curlHandle, CURLOPT_HEADERDATA, this );
     curl_easy_setopt( m_curlHandle, CURLOPT_WRITEFUNCTION, curlCallback );
     curl_easy_setopt( m_curlHandle, CURLOPT_WRITEDATA, this );
 
